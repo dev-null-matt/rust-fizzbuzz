@@ -1,3 +1,6 @@
+///
+/// A storage for messages used to format fizzbuzz numbers.
+///
 pub struct FizzbuzzMessageStorage {
     fizz        : String,
     buzz        : String,
@@ -6,6 +9,13 @@ pub struct FizzbuzzMessageStorage {
 
 impl FizzbuzzMessageStorage {
 
+    ///
+    /// Constructs a default fizzbuzz message store consisting of:
+    ///
+    /// * fizz
+    /// * buzz
+    /// * fizzbuzz
+    ///
     pub fn default() -> FizzbuzzMessageStorage {
         FizzbuzzMessageStorage {
             fizz : "fizz".to_string(),
@@ -14,6 +24,9 @@ impl FizzbuzzMessageStorage {
         }
     }
 
+    ///
+    /// Constructs a fizzbuzz message store with the supplied messages.
+    ///
     pub fn new(fizz : &str, buzz : &str, fizzbuzz : &str) -> FizzbuzzMessageStorage {
         FizzbuzzMessageStorage {
             fizz : fizz.to_string(),
@@ -22,14 +35,23 @@ impl FizzbuzzMessageStorage {
         }
     }
 
+    ///
+    /// Returns the fizz message for this message storage.
+    ///
     pub fn fizz(&self) -> String {
         self.fizz.to_string()
     }
 
+    ///
+    /// Returns the buzz message for this message storage.
+    ///
     pub fn buzz(&self) -> String {
         self.buzz.to_string()
     }
 
+    ///
+    /// Returns the fizzbuzz message for this message storage.
+    ///
     pub fn fizzbuzz(&self) -> String {
         self.fizzbuzz.to_string()
     }

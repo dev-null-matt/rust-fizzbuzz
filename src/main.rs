@@ -3,6 +3,9 @@ extern crate time;
 
 use fizzbuzz::fizzbuzz_number_formatter::FizzbuzzMessageFormatter;
 
+///
+/// A simple reference implementation using the fizzbuzz library
+///
 fn main() {
 
     let formatter = FizzbuzzMessageFormatter::default();

@@ -1,17 +1,27 @@
 use fizzbuzz_message_storage::FizzbuzzMessageStorage;
 
+///
+/// Formatter for fizzbuzz numbers.  Takes a number and uses
+/// the supplied message storage to format the supplied number.
+///
 pub struct FizzbuzzMessageFormatter {
     message_store : FizzbuzzMessageStorage,
 }
 
 impl FizzbuzzMessageFormatter {
 
+    ///
+    /// Constructs a `FizzbuzzMessageFormatter` with a default `FizzbuzzMessageStorage`.
+    ///
     pub fn default() -> FizzbuzzMessageFormatter {
         FizzbuzzMessageFormatter {
             message_store : FizzbuzzMessageStorage::default(),
         }
     }
 
+    ///
+    /// Formats a fizzbuzz number using this formatter's underlying message storage.
+    ///
     pub fn format_number(&self, count : i64) -> String {
         let message =
             if count % 15 == 0 {
