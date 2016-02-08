@@ -1,108 +1,68 @@
 extern crate fizzbuzz;
+extern crate iron;
 
 use fizzbuzz::fizzbuzz_number_formatter::FizzbuzzMessageFormatter;
 
-use std::collections::HashMap;
-use std::io::{BufRead, BufReader, BufWriter, Write};
-use std::net::{TcpListener, TcpStream};
-use std::thread;
+use iron::IronResult;
 
-///
-/// A simple reference implementation using the fizzbuzz library
-///
+use iron::headers::*;
+use iron::method::Method;
+use iron::mime::*;
+use iron::prelude::Iron;
+use iron::request::Request;
+use iron::response::Response;
+use iron::status;
+
 fn main() {
-
-    let listener = TcpListener::bind("127.0.0.1:9090").unwrap();
-
-    // accept connections and process them, spawning a new thread for each one
-    for stream in listener.incoming() {
-        match stream {
-            Ok(stream) => {
-                thread::spawn(move|| {
-                    // connection succeeded
-                    let response = generate_response(&stream);
-                    let mut writer = BufWriter::new(stream);
-                    writer.write_all(response.as_bytes()).unwrap();
-                });
-            }
-            Err(_) => { /* connection failed */ }
-        }
-    }
-
-    // close the socket server
-    drop(listener);
+    Iron::new(process_request).http("localhost:3000").unwrap();
 }
 
-fn generate_response(stream: &TcpStream) -> String {
+fn process_request(request: &mut Request) -> IronResult<Response>  {
+    match request.method {
+        Method::Get => prepare_fizzbuzz_response(request),
+        _ => Ok(Response::with((status::MethodNotAllowed, "Method not allowed"))),
+    }
+}
 
-    let formatter = FizzbuzzMessageFormatter::default();
+fn prepare_fizzbuzz_response(request: &Request) -> IronResult<Response> {
 
-    let mut reader = BufReader::new(stream);
+    let requested_content_type = determine_mime_type(request.headers.get::<Accept>().unwrap());
+    let number = request.url.path[0].parse::<i64>().unwrap();
 
-    let request_line = parse_request_line(&mut reader);
-    let http_headers = parse_http_header(&mut reader);
+    let content = if requested_content_type == ContentType::json() {
+        generate_json_content(number)
+    } else {
+        generate_plaintext_content(number)
+    };
 
-    let tokens: Vec<&str> = request_line.split(' ').collect();
-    let result = tokens[1].replace("/", "").parse::<i64>();
-    let mut content = "".to_string();
-    let mut response = "".to_string();
+    let mut response = Response::with((status::Ok, content));
+    response.headers.set(requested_content_type);
 
-    match result {
-        Ok(result) => {
-            content = formatter.format_number(result);
-        }
-        Err(_) => {
-            content = "error processing request".to_string();
+    Ok(response)
+}
+
+fn determine_mime_type(accept: &Accept) -> ContentType {
+
+    let json: Mime = "application/json".parse().unwrap();
+
+    let mut requested_content_type = ContentType::plaintext();
+
+    for content_type in accept.iter() {
+        if content_type.item == json {
+            requested_content_type = ContentType::json();
         }
     }
 
-    response = generate_response_headers(&content);
-    response.push_str(&content);
+    requested_content_type
+}
 
+fn generate_json_content(number : i64) -> String {
+    let mut response = "{\"fizzbuzz\" : \"".to_string();
+    response.push_str(&FizzbuzzMessageFormatter::default().format_number(number));
+    response.push_str("\"}");
     response
 }
 
-fn generate_response_headers(content: &str) -> String {
-
-    let mut headers = "HTTP/1.1 200 OK\r\n".to_string();
-
-    headers.push_str("Connection: Closed\r\n");
-    headers.push_str("Content-Type: text/html\r\n");
-    headers.push_str("Server: Rust\r\n");
-    headers.push_str("Content-Length: ");
-    headers.push_str(&(content.as_bytes().len().to_string()));
-    headers.push_str("\r\n\r\n");
-
-    headers
-}
-
-fn parse_request_line(reader: &mut BufReader<&TcpStream>) -> String {
-    let mut line = String::new();
-    reader.read_line(&mut line).unwrap();
-    line
-}
-
-fn parse_http_header(reader: &mut BufReader<&TcpStream>) -> HashMap<String, String> {
-
-    let mut headers : HashMap<String, String> = HashMap::new();
-
-    // Read all the http headers
-    loop {
-        let mut line = String::new();
-        let result = reader.read_line(&mut line);
-        match result {
-            Ok(_) => {
-                // The last line of an http header is blank
-                if line.trim().is_empty() {break;}
-
-                // ':' separates header keys from values
-                let tokens: Vec<&str> = line.split(':').collect();
-
-                headers.insert(String::from(tokens[0].trim()), String::from(tokens[1].trim()));
-            }
-            Err(_) => { /* An error occurred */ }
-        }
-    }
-
-    headers
+fn generate_plaintext_content(number : i64) -> String {
+    FizzbuzzMessageFormatter::default().format_number(number)
 }
