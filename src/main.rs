@@ -27,7 +27,7 @@ fn process_request(request: &mut Request) -> IronResult<Response>  {
 fn prepare_fizzbuzz_response(request: &Request) -> IronResult<Response> {
 
     let requested_content_type = determine_mime_type(request.headers.get::<Accept>().unwrap());
-    let number = request.url.path[0].parse::<i64>().unwrap();
+    let number = request.url.path()[0].parse::<i64>().unwrap();
 
     let content = if requested_content_type == ContentType::json() {
         generate_json_content(number)
@@ -59,6 +59,8 @@ fn determine_mime_type(accept: &Accept) -> ContentType {
 fn generate_json_content(number : i64) -> String {
     let mut response = "{\"fizzbuzz\" : \"".to_string();
     response.push_str(&FizzbuzzMessageFormatter::default().format_number(number));
+    response.push_str("\",\"number\" : \"");
+    response.push_str(&number.to_string());
     response.push_str("\"}");
     response
 }
