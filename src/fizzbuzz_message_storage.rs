@@ -1,10 +1,10 @@
+use std::collections::HashMap;
+
 ///
 /// A storage for messages used to format fizzbuzz numbers.
 ///
 pub struct FizzbuzzMessageStorage {
-    fizz        : String,
-    buzz        : String,
-    fizzbuzz    : String,
+    map : HashMap<i64, String>,
 }
 
 impl FizzbuzzMessageStorage {
@@ -17,10 +17,14 @@ impl FizzbuzzMessageStorage {
     /// * fizzbuzz
     ///
     pub fn default() -> FizzbuzzMessageStorage {
+
+        let mut map = HashMap::new();
+        map.insert(3, "fizz".to_string());
+        map.insert(5, "buzz".to_string());
+        map.insert(15, "fizzbuzz".to_string());
+
         FizzbuzzMessageStorage {
-            fizz : "fizz".to_string(),
-            buzz : "buzz".to_string(),
-            fizzbuzz : "fizzbuzz".to_string(),
+            map: map,
         }
     }
 
@@ -28,10 +32,14 @@ impl FizzbuzzMessageStorage {
     /// Constructs a fizzbuzz message store with the supplied messages.
     ///
     pub fn new(fizz : &str, buzz : &str, fizzbuzz : &str) -> FizzbuzzMessageStorage {
+
+        let mut map = HashMap::new();
+        map.insert(3, fizz.to_owned());
+        map.insert(5, buzz.to_owned());
+        map.insert(15, fizzbuzz.to_owned());
+
         FizzbuzzMessageStorage {
-            fizz : fizz.to_string(),
-            buzz : buzz.to_string(),
-            fizzbuzz : fizzbuzz.to_string(),
+            map: map,
         }
     }
 
@@ -39,21 +47,21 @@ impl FizzbuzzMessageStorage {
     /// Returns the fizz message for this message storage.
     ///
     pub fn fizz(&self) -> String {
-        self.fizz.to_string()
+        self.map.get(&3).unwrap_or(&"fizz".to_string()).to_owned()
     }
 
     ///
     /// Returns the buzz message for this message storage.
     ///
     pub fn buzz(&self) -> String {
-        self.buzz.to_string()
+        self.map.get(&5).unwrap_or(&"buzz".to_string()).to_owned()
     }
 
     ///
     /// Returns the fizzbuzz message for this message storage.
     ///
     pub fn fizzbuzz(&self) -> String {
-        self.fizzbuzz.to_string()
+        self.map.get(&15).unwrap_or(&"fizzbuzz".to_string()).to_owned()
     }
 }
 
