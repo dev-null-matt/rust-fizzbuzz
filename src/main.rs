@@ -18,38 +18,48 @@ fn main() {
 }
 
 fn process_request(request: &mut Request) -> IronResult<Response>  {
-    match request.method {
-        Method::Get => prepare_fizzbuzz_response(request),
-        _ => Ok(Response::with((status::MethodNotAllowed, "Method not allowed"))),
-    }
-}
-
-fn prepare_fizzbuzz_response(request: &Request) -> IronResult<Response> {
 
     let requested_content_type = determine_mime_type(request.headers.get::<Accept>().unwrap());
+
+    let response = if request.method != Method::Get {
+        Ok(Response::with((status::MethodNotAllowed, "Method not allowed")))
+    } else if requested_content_type == None {
+        Ok(Response::with((status::NotAcceptable, "Not acceptable")))
+    } else {
+        prepare_fizzbuzz_response(request, &requested_content_type.unwrap())
+    };
+
+    response
+}
+
+fn prepare_fizzbuzz_response(request: &Request, requested_content_type: &ContentType) -> IronResult<Response> {
+
     let number = request.url.path()[0].parse::<i64>().unwrap();
 
-    let content = if requested_content_type == ContentType::json() {
+    let content = if requested_content_type == &ContentType::json() {
         generate_json_content(number)
     } else {
         generate_plaintext_content(number)
     };
 
     let mut response = Response::with((status::Ok, content));
-    response.headers.set(requested_content_type);
+    response.headers.set(requested_content_type.to_owned());
 
     Ok(response)
 }
 
-fn determine_mime_type(accept: &Accept) -> ContentType {
+fn determine_mime_type(accept: &Accept) -> Option<ContentType> {
 
     let json: Mime = "application/json".parse().unwrap();
+    let text: Mime = "text/plain".parse().unwrap();
 
-    let mut requested_content_type = ContentType::plaintext();
+    let mut requested_content_type = None;
 
     for content_type in accept.iter() {
         if content_type.item == json {
-            requested_content_type = ContentType::json();
+            requested_content_type = Some(ContentType::json());
+        } else if content_type.item == text {
+            requested_content_type = Some(ContentType::plaintext());
         }
     }
 
